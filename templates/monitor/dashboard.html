@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1>System Monitoring</h1>
+<div class="grid">
+    <div class="card">
+        <h2>CPU Usage</h2>
+        <p>{{ cpu }}%</p>
+    </div>
+    <div class="card">
+        <h2>Disk Usage ({{ data_root }})</h2>
+        {% if disk_usage %}
+            <ul>
+                <li>Total: {{ (disk_usage.total / (1024**3))|round(2) }} GB</li>
+                <li>Used: {{ (disk_usage.used / (1024**3))|round(2) }} GB</li>
+                <li>Free: {{ (disk_usage.free / (1024**3))|round(2) }} GB</li>
+                <li>Percent: {{ disk_usage.percent }}%</li>
+            </ul>
+        {% else %}
+            <p>No disk data available.</p>
+        {% endif %}
+    </div>
+</div>
+<section>
+    <h2>Recent Syslog</h2>
+    <pre class="log">
+{% for line in log_lines %}{{ line }}{% endfor %}
+    </pre>
+</section>
+{% endblock %}

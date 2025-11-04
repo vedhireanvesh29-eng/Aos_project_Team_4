@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NAS Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-brand">NAS Web</div>
+    <ul class="nav-links">
+        {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('files.index') }}">Files</a></li>
+            {% if current_user.role == 'admin' %}
+                <li><a href="{{ url_for('auth.users') }}">Users</a></li>
+                <li><a href="{{ url_for('monitor.dashboard') }}">Monitoring</a></li>
+                <li><a href="{{ url_for('backups.list_backups') }}">Backups</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+        {% else %}
+            <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+        {% endif %}
+    </ul>
+</nav>
+<main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>

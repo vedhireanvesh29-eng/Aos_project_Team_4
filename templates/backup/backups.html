@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1>Backups</h1>
+<section class="grid">
+    <div>
+        <h2>Create Backup</h2>
+        <form method="post" action="{{ url_for('backups.create_backup') }}" class="form-card">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Create Now</button>
+        </form>
+        <h2>Schedule</h2>
+        <form method="post" action="{{ url_for('backups.schedule_backup') }}" class="form-card">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>Daily Time (HH:MM)
+                <input type="time" name="schedule" value="02:00">
+            </label>
+            <button type="submit">Save Schedule</button>
+        </form>
+    </div>
+    <div>
+        <h2>Existing Backups</h2>
+        <table>
+            <thead>
+            <tr><th>Archive</th><th>Created</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+            {% for backup in backups %}
+                <tr>
+                    <td>{{ backup.archive_path }}</td>
+                    <td>{{ backup.created_at }}</td>
+                    <td>
+                        <form method="post" action="{{ url_for('backups.restore_backup') }}" onsubmit="return confirm('Restore this backup?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="archive" value="{{ backup.archive_path }}">
+                            <button type="submit">Restore</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="3">No backups yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
