@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Dashboard</h2>
+<div class="card">
+  {% if info.connected %}
+    <p>✅ Connected to MySQL</p>
+    <p><strong>Tables:</strong> {{ info.tables | join(', ') }}</p>
+  {% else %}
+    <p>❌ Not connected to MySQL</p>
+    <p><strong>Error:</strong> {{ info.error }}</p>
+  {% endif %}
+</div>
+
+<form method="post" action="/init_admin" style="margin-top:1rem">
+  <button type="submit">Create Default Admin User</button>
+</form>
+{% endblock %}

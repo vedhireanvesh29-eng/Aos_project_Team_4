@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Backup & Restore</h2>
+<form method="post" action="/backup/create">
+  <button type="submit">Create Backup (.tar.gz)</button>
+</form>
+
+<h3 style="margin-top:1rem">Existing Archives</h3>
+<ul>
+  {% for a in archives %}
+    <li>
+      {{ a }}
+      <a href="/backup/download?name={{ a }}">download</a>
+      <form style="display:inline" method="post" action="/backup/restore">
+        <input type="hidden" name="name" value="{{ a }}">
+        <button type="submit">restore</button>
+      </form>
+    </li>
+  {% else %}
+    <li>No archives yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

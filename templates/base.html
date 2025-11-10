@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><title>NAS Web Server</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--primary:#2563eb;--primary-dark:#1e40af;--bg:#f8fafc;--text:#1e293b;--card:#fff;--success:#16a34a;--error:#dc2626;--info:#2563eb}
+*{box-sizing:border-box}body{font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0}
+header{background:var(--primary);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:1.5rem}nav a{color:#fff;text-decoration:none;margin-left:1rem;font-weight:500}
+main{max-width:980px;margin:2rem auto;padding:2rem;background:var(--card);border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+h2{color:var(--primary-dark)}.flash{padding:1rem;border-radius:6px;margin-bottom:1rem;font-weight:500}
+.success{background:#dcfce7;color:var(--success)}.info{background:#dbeafe;color:var(--info)}.danger{background:#fee2e2;color:var(--error)}
+footer{text-align:center;color:#64748b;font-size:.9rem;margin-top:2rem}
+input,select,button{padding:.5rem;border-radius:6px}
+button{background:var(--primary);color:#fff;border:none;cursor:pointer}
+button:hover{background:var(--primary-dark)}
+table{width:100%;border-collapse:collapse}th,td{padding:.5rem;border-bottom:1px solid #e5e7eb;text-align:left}
+.card{padding:1rem;border:2px solid #e5e7eb;border-radius:8px;background:#f9fafb}
+</style>
+</head>
+<body>
+<header>
+  <h1>NAS Web Server</h1>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/auth/users">Users</a>
+    <a href="/files">Files</a>
+    <a href="/monitor">Monitoring</a>
+    <a href="/backup">Backup</a>
+    {% if current_user.is_authenticated %}
+    <span style="margin-left:1rem;opacity:.9">Hello, {{ current_user.username }}</span>
+    <a href="/auth/logout" style="margin-left:1rem">Logout</a>
+  {% else %}
+    <a href="/auth/login" style="margin-left:1rem">Login</a>
+  {% endif %}
+  </nav>
+</header>
+
+<main>
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}{% for cat, m in msgs %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+  {% block body %}{% endblock %}
+</main>
+
+<footer>© 2025 NAS Web Server — Developed by Anvesh</footer>
+</body></html>

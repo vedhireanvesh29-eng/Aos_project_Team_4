@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Files</h2>
+<p><strong>Path:</strong> /{{ rel }}</p>
+
+<form method="post" action="/files/mkdir">
+  <input type="hidden" name="rel" value="{{ rel }}">
+  <input name="name" placeholder="New folder name">
+  <button type="submit">Create Folder</button>
+</form>
+
+<form method="post" action="/files/rename" style="margin-top:.5rem">
+  <input type="hidden" name="rel" value="{{ rel }}">
+  <input name="old" placeholder="old name">
+  <input name="new" placeholder="new name">
+  <button type="submit">Rename</button>
+</form>
+
+<form method="post" action="/files/delete" style="margin-top:.5rem">
+  <input type="hidden" name="rel" value="{{ rel }}">
+  <input name="target" placeholder="file_or_folder">
+  <button type="submit">Delete</button>
+</form>
+
+<form method="post" action="/files/upload" enctype="multipart/form-data" style="margin-top:.5rem">
+  <input type="hidden" name="rel" value="{{ rel }}">
+  <input type="file" name="file">
+  <button type="submit">Upload</button>
+</form>
+
+<ul style="margin-top:1rem">
+  {% if rel %}<li><a href="/files?p={{ up }}">⬅️ Up</a></li>{% endif %}
+  {% for it in items %}
+    <li>
+      {% if it.is_dir %}
+        📁 <a href="/files?p={{ it.rel }}">{{ it.name }}</a>
+      {% else %}
+        📄 {{ it.name }} — <a href="/files/download?rel={{ it.rel }}">download</a>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}
