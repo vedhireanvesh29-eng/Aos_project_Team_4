@@ -414,9 +414,11 @@
         }
 
         .badge-primary { background: var(--primary); color: white; }
+        .badge-secondary { background: var(--text-secondary); color: white; }
         .badge-success { background: var(--success); color: white; }
         .badge-warning { background: var(--warning); color: white; }
         .badge-danger { background: var(--danger); color: white; }
+        .badge-info { background: var(--info); color: white; }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -454,10 +456,13 @@
             </a>
             <nav>
                 <a href="/"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="/files"><i class="fas fa-folder"></i> Files</a>
+                {% if current_user.is_authenticated %}
+                <a href="/files"><i class="fas fa-folder"></i> File Manager</a>
+                <a href="/files/my-files"><i class="fas fa-file-alt"></i> My Files</a>
                 <a href="/monitor"><i class="fas fa-chart-line"></i> Monitor</a>
-                <a href="/backup"><i class="fas fa-archive"></i> Backup</a>
+                {% endif %}
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                <a href="/backup"><i class="fas fa-archive"></i> Backup</a>
                 <a href="/auth/users"><i class="fas fa-users"></i> Users</a>
                 {% endif %}
                 
@@ -465,6 +470,9 @@
                 <span class="user-info">
                     <i class="fas fa-user-circle"></i>
                     {{ current_user.username }}
+                    {% if current_user.role == 'admin' %}
+                    <span class="badge badge-danger" style="margin-left: 0.5rem;">ADMIN</span>
+                    {% endif %}
                 </span>
                 <a href="/auth/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 {% else %}
@@ -494,7 +502,7 @@
     </div>
 
     <footer>
-        <p> 2025 NAS Web Server <p>
+        <p>© 2025 NAS Web Server | Team 4 AOS Project</p>
     </footer>
 </body>
 </html>

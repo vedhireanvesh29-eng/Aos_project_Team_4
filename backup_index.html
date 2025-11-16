@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Backup & Restore{% endblock %}
+
+{% block body %}
+<h2><i class="fas fa-archive"></i> Backup & Restore</h2>
+
+<div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 style="color: white; margin: 0;">
+                <i class="fas fa-shield-alt"></i> System Backup Management
+            </h3>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">
+                Create, restore, and manage your NAS backups
+            </p>
+        </div>
+        <div style="font-size: 3rem; opacity: 0.3;">
+            <i class="fas fa-archive"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card-grid" style="margin-bottom: 2rem;">
+    <div class="card">
+        <h3 style="margin-top: 0;"><i class="fas fa-plus-circle"></i> Create New Backup</h3>
+        <p class="text-muted">Manually create a full system backup archive (.tar.gz)</p>
+        <form method="post" action="/backup/create" style="margin-top: 1rem;">
+            <button type="submit" class="btn-primary" onclick="return confirm('Create a new backup? This may take a few minutes.');">
+                <i class="fas fa-archive"></i> Create Backup Now
+            </button>
+        </form>
+    </div>
+    
+    <div class="card">
+        <h3 style="margin-top: 0;"><i class="fas fa-clock"></i> Auto Daily Backup</h3>
+        <p class="text-muted">Create an automatic backup (one per day)</p>
+        <form method="post" action="/backup/auto-create" style="margin-top: 1rem;">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-robot"></i> Create Daily Backup
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Backup Statistics -->
+{% if backups %}
+<div class="card" style="background: var(--light); margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 2rem;">
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary);">
+                {{ backups|length }}
+            </div>
+            <div class="text-muted">Total Backups</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--success);">
+                {{ "%.2f"|format(backups|sum(attribute='size_mb')) }} MB
+            </div>
+            <div class="text-muted">Total Size</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--info);">
+                {{ backups[0].created_at.strftime('%Y-%m-%d') if backups else 'N/A' }}
+            </div>
+            <div class="text-muted">Latest Backup</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Backups List -->
+<h3><i class="fas fa-list"></i> Available Backups</h3>
+
+{% if backups %}
+<div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th><i class="fas fa-file-archive"></i> Archive Name</th>
+                <th><i class="fas fa-calendar"></i> Created</th>
+                <th><i class="fas fa-hdd"></i> Size</th>
+                <th><i class="fas fa-cog"></i> Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for backup in backups %}
+            <tr>
+                <td>
+                    <i class="fas fa-file-archive" style="color: #f59e0b; margin-right: 0.5rem;"></i>
+                    <strong>{{ backup.name }}</strong>
+                </td>
+                <td>
+                    <span class="text-muted">
+                        <i class="fas fa-clock"></i>
+                        {{ backup.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge badge-info">
+                        <i class="fas fa-database"></i> {{ backup.size_mb }} MB
+                    </span>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        {% if backup.id %}
+                        <!-- Download -->
+                        <a href="/backup/download/{{ backup.id }}" class="btn btn-sm" style="background: var(--info); color: white;">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        
+                        <!-- Restore -->
+                        <form method="post" action="/backup/restore/{{ backup.id }}" style="display: inline;"
+                              onsubmit="return confirm('⚠️ WARNING: This will restore all files from this backup, potentially overwriting current data. A safety backup will be created first.\n\nAre you sure you want to continue?');">
+                            <button type="submit" class="btn btn-sm" style="background: var(--warning); color: white;">
+                                <i class="fas fa-undo"></i> Restore
+                            </button>
+                        </form>
+                        
+                        <!-- Delete -->
+                        <form method="post" action="/backup/delete/{{ backup.id }}" style="display: inline;"
+                              onsubmit="return confirm('Delete backup {{ backup.name }}?\n\nThis action cannot be undone!');">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="badge badge-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Orphaned File
+                        </span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <i class="fas fa-archive" style="font-size: 5rem; opacity: 0.2; margin-bottom: 1rem;"></i>
+        <h3>No Backups Found</h3>
+        <p>You haven't created any backups yet. Click "Create Backup Now" to get started.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Information Card -->
+<div class="card" style="background: #dbeafe; border-left: 4px solid var(--info); margin-top: 2rem;">
+    <h3><i class="fas fa-info-circle"></i> Backup Information</h3>
+    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+        <li style="margin-bottom: 0.5rem;"><strong>Manual Backups:</strong> Create backups anytime you need to save your current state</li>
+        <li style="margin-bottom: 0.5rem;"><strong>Daily Auto Backup:</strong> Creates one backup per day automatically</li>
+        <li style="margin-bottom: 0.5rem;"><strong>Restore Process:</strong> Creates a safety backup before restoring to prevent data loss</li>
+        <li style="margin-bottom: 0.5rem;"><strong>File Format:</strong> All backups are compressed .tar.gz archives</li>
+        <li><strong>Storage Location:</strong> {{ BACKUP_ROOT if BACKUP_ROOT is defined else '/srv/nas_backups' }}</li>
+    </ul>
+</div>
+
+<!-- Best Practices -->
+<div class="card" style="background: #d1fae5; border-left: 4px solid var(--success); margin-top: 1rem;">
+    <h3><i class="fas fa-lightbulb"></i> Best Practices</h3>
+    <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+        <li style="margin-bottom: 0.5rem;">✅ Create backups before major system changes</li>
+        <li style="margin-bottom: 0.5rem;">✅ Use daily auto backup for regular protection</li>
+        <li style="margin-bottom: 0.5rem;">✅ Download important backups to external storage</li>
+        <li style="margin-bottom: 0.5rem;">✅ Test restore process periodically</li>
+        <li>✅ Keep at least 3-5 recent backups</li>
+    </ul>
+</div>
+
+<style>
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+</style>
+{% endblock %}

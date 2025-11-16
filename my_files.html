@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}My Files{% endblock %}
+
+{% block body %}
+<div class="flex space-between" style="margin-bottom: 2rem;">
+    <h2><i class="fas fa-file-alt"></i> My Files</h2>
+    <a href="/files" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> Back to File Manager
+    </a>
+</div>
+
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 style="color: white; margin: 0;">
+                <i class="fas fa-folder-open"></i> Files You Can Access
+            </h3>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">
+                View all files you own or that have been shared with you
+            </p>
+        </div>
+        <div style="font-size: 3rem; opacity: 0.3;">
+            <i class="fas fa-file-alt"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <button class="filter-btn active" onclick="filterFiles('all')">
+        <i class="fas fa-list"></i> All Files ({{ files|length }})
+    </button>
+    <button class="filter-btn" onclick="filterFiles('owned')">
+        <i class="fas fa-user"></i> My Files
+    </button>
+    <button class="filter-btn" onclick="filterFiles('shared')">
+        <i class="fas fa-share-alt"></i> Shared with Me
+    </button>
+    <button class="filter-btn" onclick="filterFiles('read')">
+        <i class="fas fa-eye"></i> Read Access
+    </button>
+    <button class="filter-btn" onclick="filterFiles('write')">
+        <i class="fas fa-edit"></i> Write Access
+    </button>
+</div>
+
+<!-- Files Table -->
+{% if files %}
+<div style="overflow-x: auto;">
+    <table id="filesTable">
+        <thead>
+            <tr>
+                <th><i class="fas fa-file"></i> File Path</th>
+                <th><i class="fas fa-user"></i> Owner</th>
+                <th><i class="fas fa-shield-alt"></i> Access Level</th>
+                <th><i class="fas fa-calendar"></i> Created</th>
+                <th><i class="fas fa-cog"></i> Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+            <tr class="file-row" 
+                data-owned="{{ 'true' if file.is_owner else 'false' }}"
+                data-read="{{ 'true' if file.can_read else 'false' }}"
+                data-write="{{ 'true' if file.can_write else 'false' }}">
+                <td>
+                    <i class="fas fa-file" style="color: #64748b; margin-right: 0.5rem;"></i>
+                    <strong>{{ file.path }}</strong>
+                </td>
+                <td>
+                    <span class="badge {% if file.is_owner %}badge-primary{% else %}badge-secondary{% endif %}">
+                        <i class="fas fa-user-circle"></i> {{ file.owner_name }}
+                    </span>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        {% if file.is_owner %}
+                        <span class="badge badge-success">
+                            <i class="fas fa-crown"></i> Owner
+                        </span>
+                        {% endif %}
+                        {% if file.can_read %}
+                        <span class="badge badge-info">
+                            <i class="fas fa-eye"></i> Read
+                        </span>
+                        {% endif %}
+                        {% if file.can_write %}
+                        <span class="badge badge-warning">
+                            <i class="fas fa-edit"></i> Write
+                        </span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <span class="text-muted">
+                        <i class="fas fa-clock"></i> 
+                        {{ file.created_at.strftime('%Y-%m-%d %H:%M') if file.created_at else 'N/A' }}
+                    </span>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        {% if file.can_read %}
+                        <a href="/files/download?rel={{ file.path }}" class="btn btn-sm" style="background: var(--info); color: white;">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        {% endif %}
+                        
+                        {% if file.is_owner or is_admin %}
+                        <a href="/files/share/{{ file.id }}" class="btn btn-sm" style="background: var(--secondary); color: white;">
+                            <i class="fas fa-share-alt"></i> Share
+                        </a>
+                        {% endif %}
+                        
+                        {% if file.can_delete or is_admin %}
+                        <form method="post" action="/files/delete" style="display: inline;" 
+                              onsubmit="return confirm('Delete {{ file.path }}?');">
+                            <input type="hidden" name="rel" value="{{ '/'.join(file.path.split('/')[:-1]) }}">
+                            <input type="hidden" name="target" value="{{ file.path.split('/')[-1] }}">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <i class="fas fa-folder-open" style="font-size: 5rem; opacity: 0.2; margin-bottom: 1rem;"></i>
+        <h3>No Files Found</h3>
+        <p>You don't have any files yet. Upload files in the File Manager to get started.</p>
+        <a href="/files" class="btn btn-primary" style="margin-top: 1rem;">
+            <i class="fas fa-upload"></i> Go to File Manager
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .filter-btn {
+        padding: 0.75rem 1.5rem;
+        border: 2px solid var(--border);
+        background: white;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filter-btn:hover {
+        border-color: var(--primary);
+        background: var(--light);
+        transform: translateY(-2px);
+    }
+    
+    .filter-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .file-row {
+        transition: all 0.2s;
+    }
+    
+    .file-row.hidden {
+        display: none;
+    }
+</style>
+
+<script>
+function filterFiles(type) {
+    // Update active button
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.filter-btn').classList.add('active');
+    
+    const rows = document.querySelectorAll('.file-row');
+    
+    rows.forEach(row => {
+        let show = false;
+        
+        switch(type) {
+            case 'all':
+                show = true;
+                break;
+            case 'owned':
+                show = row.dataset.owned === 'true';
+                break;
+            case 'shared':
+                show = row.dataset.owned === 'false';
+                break;
+            case 'read':
+                show = row.dataset.read === 'true';
+                break;
+            case 'write':
+                show = row.dataset.write === 'true';
+                break;
+        }
+        
+        if (show) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    });
+}
+</script>
+{% endblock %}
