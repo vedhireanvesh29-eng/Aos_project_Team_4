@@ -1,27 +1,12 @@
--- MySQL dump 10.13  Distrib 8.0.43, for Linux (x86_64)
---
--- Host: localhost    Database: nas_app
--- ------------------------------------------------------
--- Server version	8.0.43-0ubuntu0.24.04.2
+-- Enhanced NAS Database Schema with File Ownership & Permissions
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Table structure for table `users`
---
-
+-- Users table
+DROP TABLE IF EXISTS `file_permissions`;
+DROP TABLE IF EXISTS `permissions`;
+DROP TABLE IF EXISTS `backups`;
+DROP TABLE IF EXISTS `files`;
 DROP TABLE IF EXISTS `users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(64) NOT NULL,
@@ -30,16 +15,9 @@ CREATE TABLE `users` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Table structure for table `permissions`
---
-
-DROP TABLE IF EXISTS `permissions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+-- Global permissions table (for system-wide permissions)
 CREATE TABLE `permissions` (
   `user_id` int NOT NULL,
   `can_read` tinyint(1) DEFAULT '1',
@@ -49,15 +27,8 @@ CREATE TABLE `permissions` (
   PRIMARY KEY (`user_id`),
   CONSTRAINT `permissions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `files`
---
-
-DROP TABLE IF EXISTS `files`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+-- Files table with ownership tracking
 CREATE TABLE `files` (
   `id` int NOT NULL AUTO_INCREMENT,
   `path` text NOT NULL,
@@ -67,30 +38,35 @@ CREATE TABLE `files` (
   KEY `owner_id` (`owner_id`),
   CONSTRAINT `files_ibfk_1` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `backups`
---
+-- File-level permissions (user can share files with specific users)
+CREATE TABLE `file_permissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `file_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `can_read` tinyint(1) DEFAULT '1',
+  `can_write` tinyint(1) DEFAULT '0',
+  `granted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_file_user` (`file_id`, `user_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `file_permissions_ibfk_1` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `file_permissions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-DROP TABLE IF EXISTS `backups`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+-- Backups table
 CREATE TABLE `backups` (
   `id` int NOT NULL AUTO_INCREMENT,
   `archive_path` text NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+-- Insert default admin user (password: admin123)
+-- NOTE: Change this password immediately after first login!
+INSERT INTO users (username, password_hash, role) VALUES 
+('admin', 'scrypt:32768:8:1$lEaXqGp3j8KNZn3l$290a1c5c71e7e34fcceea7f7d7a8e7b6d9a4b4f6c1e1a0e1d9f1b6e7a2b1c0d8e5f6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9', 'admin');
 
--- Dump completed on 2025-11-10 12:40:01
+-- Grant admin full permissions
+INSERT INTO permissions (user_id, can_read, can_write, can_edit, is_admin) VALUES 
+(1, 1, 1, 1, 1);

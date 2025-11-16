@@ -1,9 +1,14 @@
+
 # Python
 __pycache__/
 *.pyc
 .venv/
+venv/
+
+# Environment
 .env
 .env.*
+!.env.example
 
 # OS/Tools
 .DS_Store
@@ -13,6 +18,14 @@ Thumbs.db
 *.log
 *.sqlite
 
+# IDE
+.vscode/
+.idea/
+
 # Project paths not tracked
 /srv/nas_data/
 /srv/nas_backups/
+
+# Backups
+backup_*.sql
+*.tar.gz

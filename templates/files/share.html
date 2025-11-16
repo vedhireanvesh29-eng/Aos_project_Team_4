@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Share File{% endblock %}
+
+{% block body %}
+<div style="margin-bottom: 2rem;">
+    <a href="/files" class="btn btn-outline btn-sm">
+        <i class="fas fa-arrow-left"></i> Back to Files
+    </a>
+</div>
+
+<h2><i class="fas fa-share-alt"></i> Share File</h2>
+
+<div class="card">
+    <div class="flex" style="align-items: center;">
+        <i class="fas fa-file" style="font-size: 2rem; color: var(--primary);"></i>
+        <div>
+            <h3 style="margin: 0;">{{ file_path }}</h3>
+            <p class="text-muted" style="margin-top: 0.25rem;">Manage who can access this file</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Permission -->
+<div class="card">
+    <h3><i class="fas fa-user-plus"></i> Grant Access to User</h3>
+    <form method="post">
+        <div class="form-group">
+            <label for="user_id">Select User</label>
+            <select name="user_id" id="user_id" required>
+                <option value="">-- Choose a user --</option>
+                {% for user in available_users %}
+                <option value="{{ user[0] }}">{{ user[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 2rem; margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="can_read" checked>
+                <span><i class="fas fa-eye"></i> Can Read</span>
+            </label>
+            
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" name="can_write">
+                <span><i class="fas fa-edit"></i> Can Write</span>
+            </label>
+        </div>
+        
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-plus"></i> Grant Access
+        </button>
+    </form>
+</div>
+
+<!-- Current Permissions -->
+<h3><i class="fas fa-users"></i> Users with Access</h3>
+
+{% if permissions %}
+<div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Permissions</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for perm in permissions %}
+            <tr>
+                <td>
+                    <i class="fas fa-user-circle"></i>
+                    <strong>{{ perm[1] }}</strong>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                        {% if perm[2] %}
+                        <span class="badge badge-success">
+                            <i class="fas fa-eye"></i> Read
+                        </span>
+                        {% endif %}
+                        {% if perm[3] %}
+                        <span class="badge badge-warning">
+                            <i class="fas fa-edit"></i> Write
+                        </span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <form method="post" action="/files/share/{{ file_id }}/revoke/{{ perm[0] }}" 
+                          style="display: inline;"
+                          onsubmit="return confirm('Revoke access for {{ perm[1] }}?');">
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-times"></i> Revoke
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+        <i class="fas fa-user-slash" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
+        No users have been granted access to this file yet.
+    </p>
+</div>
+{% endif %}
+
+<style>
+    input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
